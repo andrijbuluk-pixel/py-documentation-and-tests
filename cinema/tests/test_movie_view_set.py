@@ -9,7 +9,7 @@ from cinema.models import Movie, Genre, Actor
 from cinema.serializers import MovieListSerializer, MovieDetailSerializer
 
 
-class MovieViewSet(APITestCase):
+class MovieViewSetTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
