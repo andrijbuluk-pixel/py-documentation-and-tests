@@ -84,3 +84,24 @@ class MovieViewSetTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]["title"], "Matrix")
+
+    def test_filter_movies_by_genres(self) -> None:
+        movie_genres_1 = Movie.objects.create(
+            title="Matrix",
+            description="Matrix",
+            duration=90,
+        )
+        movie_genres_2 = Movie.objects.create(
+            title="Avatar",
+            description="Avatar",
+            duration=90,
+        )
+
+        movie_genres_1.genres.set([self.save_genres_1])
+        movie_genres_2.genres.set([self.save_genres_2])
+
+        url = reverse("cinema:movie-list")
+        res = self.client.get(url, {"genres": f"{self.save_genres_1.id}"})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
