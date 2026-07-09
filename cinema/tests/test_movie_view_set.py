@@ -126,3 +126,26 @@ class MovieViewSetTests(APITestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
+
+    def test_movie_image_view(self) -> None:
+        movie_image = Movie.objects.create(
+            title="Matrix",
+            description="Matrix",
+            duration=90,
+        )
+
+        img = Image.new("RGB", (90, 90))
+        buffered = BytesIO()
+        img.save(buffered, format="JPEG")
+        buffered.seek(0)
+
+        file_data = SimpleUploadedFile(
+            "test.jpg",
+            buffered.read(),
+            content_type="image/jpeg"
+        )
+
+        url = reverse("cinema:movie-upload-image", args=[movie_image.id])
+        res = self.client.post(url, data={"image": file_data}, format="multipart")
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
