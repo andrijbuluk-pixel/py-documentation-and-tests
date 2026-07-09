@@ -17,7 +17,7 @@ class MovieViewSetTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            email="test54431@test.com",
+            email="test_admin@test.com",
             password="test",
             is_staff=True,
         )
@@ -79,7 +79,7 @@ class MovieViewSetTests(APITestCase):
         Movie.objects.create(**movie_2)
 
         url = reverse("cinema:movie-list")
-        res = self.client.get(url, data=movie_1)
+        res = self.client.get(url, data={"title": "Matrix"})
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
@@ -149,3 +149,33 @@ class MovieViewSetTests(APITestCase):
         res = self.client.post(url, data={"image": file_data}, format="multipart")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_movie_image_upload_forbidden_for_non_admin(self) -> None:
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            email="test_user@test.com",
+            password="test",
+        )
+        self.client.force_authenticate(self.user)
+
+        movie_image = Movie.objects.create(
+            title="Matrix",
+            description="Matrix",
+            duration=90,
+        )
+
+        img = Image.new("RGB", (90, 90))
+        buffered = BytesIO()
+        img.save(buffered, format="JPEG")
+        buffered.seek(0)
+
+        file_data = SimpleUploadedFile(
+            "test.jpg",
+            buffered.read(),
+            content_type="image/jpeg"
+        )
+
+        url = reverse("cinema:movie-upload-image", args=[movie_image.id])
+        res = self.client.post(url, data={"image": file_data}, format="multipart")
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
